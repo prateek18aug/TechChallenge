@@ -1,10 +1,15 @@
 ﻿@model TechChallenge.Models.Person
-
-<table class="table">
-    <tr class="form-group">
-        <td>@Html.DisplayFor(model => model.Name)</td>
-    </tr>
-    <tr class="form-group">
-        <td>@Html.DisplayFor(model => model.Currency)</td>
-    </tr>
-</table>
+@using (Html.BeginForm("Index", "Home", FormMethod.Get))
+{
+    <table class="table">
+        <tr class="form-group">
+            <td>@Html.DisplayFor(model => model.Name)</td>
+        </tr>
+        <tr class="form-group">
+            <td>@Html.DisplayFor(model => model.Currency)</td>
+        </tr>
+        <tr class="col text-center">
+            <td colspan="2"><input type="submit" value="Go back" class="btn btn-primary" /></td>
+        </tr>
+    </table>
+}
