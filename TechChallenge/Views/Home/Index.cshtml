@@ -1,0 +1,20 @@
+﻿@model TechChallenge.Models.Person
+
+@using (Html.BeginForm("Index", "NumberToCurrencyApi", FormMethod.Post))
+{
+    @Html.ValidationSummary(false, "", new { @class = "text-danger" })
+
+    <table class="table">
+        <tr class="form-group">
+            <td>@Html.LabelFor(model => model.Name, "Enter Name:")</td>
+            <td>@Html.TextBoxFor(model => model.Name)</td>
+        </tr>
+        <tr class="form-group">
+            <td>@Html.LabelFor(model => model.Number, "Enter Number:")</td>
+            <td>@Html.TextBoxFor(model => model.Number)</td>
+        </tr>
+        <tr class="col text-center">
+            <td colspan="2"><input id="submitButton" type="submit" value="Submit Form" class="btn btn-primary" /></td>
+        </tr>
+    </table>
+}
