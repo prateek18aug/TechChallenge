@@ -1,138 +1,126 @@
 ﻿namespace TechChallenge.Services
 {
     using System;
+    using System.Collections.Generic;
+    using System.Linq;
+    using TechChallenge.Enums;
 
     public class NumberToCurrencyConverter : INumberToCurrencyConverter
     {
         public string Convert(double numberToConvert)
         {
-            string beforeDecimalPointWord = string.Empty;
+            var beforeDecimalPointWord = new List<string>();
             var beforeDecimalPoint = Math.Sign(numberToConvert) < 0
                 ? (int)Math.Ceiling(numberToConvert)
                 : (int)Math.Floor(numberToConvert);
             if (beforeDecimalPoint != 0)
             {
-                beforeDecimalPointWord = NumberToWords(beforeDecimalPoint);
-                beforeDecimalPointWord += Math.Abs(beforeDecimalPoint) == 1 ?
-                " dollar" : " dollars";
+                beforeDecimalPointWord.AddRange(NumberToWords(beforeDecimalPoint));
+                beforeDecimalPointWord.Add(Math.Abs(beforeDecimalPoint) == 1 ?
+                "dollar" : "dollars");
             }
-            string afterDecimalPointWord = ConvertAfterDecimalPointNumber(numberToConvert, beforeDecimalPoint);
 
-            if (string.IsNullOrWhiteSpace(afterDecimalPointWord))
+            var afterDecimalPointWord = ConvertAfterDecimalPointNumber(numberToConvert, beforeDecimalPoint);
+
+            if (afterDecimalPointWord == null || !afterDecimalPointWord.Any())
             {
-                return beforeDecimalPointWord;
+                return string.Join(" ", beforeDecimalPointWord);
             }
 
-            if (string.IsNullOrWhiteSpace(beforeDecimalPointWord))
+            if (beforeDecimalPointWord == null || !beforeDecimalPointWord.Any())
             {
-                return afterDecimalPointWord;
+                return string.Join(" ", afterDecimalPointWord);
             }
 
-            return $"{beforeDecimalPointWord} and {afterDecimalPointWord}";
+            return $"{string.Join(" ", beforeDecimalPointWord)} and {string.Join(" ", afterDecimalPointWord)}";
         }
 
-        private string ConvertAfterDecimalPointNumber(double numberToConvert, int beforeDecimalPoint)
+        private List<string> ConvertAfterDecimalPointNumber(double numberToConvert, int beforeDecimalPoint)
         {
-            string afterDecimalPointWord = string.Empty;
+            var afterDecimalPointWord = new List<string>();
             var afterDecimalPoint = numberToConvert > 1 ?
-                (int)((numberToConvert - beforeDecimalPoint) * 100) :
-                (int)(Math.Abs((numberToConvert - beforeDecimalPoint) * 100));
+                (int)(Math.Round(numberToConvert - beforeDecimalPoint, 2) * 100) :
+                (int)(Math.Abs(Math.Round(numberToConvert - beforeDecimalPoint, 2) * 100));
             if (afterDecimalPoint != 0)
             {
-                afterDecimalPointWord = SmallNumberToWord(afterDecimalPoint, string.Empty, string.Empty);
-                afterDecimalPointWord += Math.Abs(afterDecimalPoint) == 1 ?
-                " cent" : " cents";
+                SmallNumberToWord(afterDecimalPoint, afterDecimalPointWord);
+                afterDecimalPointWord.Add(Math.Abs(afterDecimalPoint) == 1 ?
+                "cent" : "cents");
             }
 
             return afterDecimalPointWord;
         }
 
-        private string NumberToWords(int number)
+        private List<string> NumberToWords(int number)
         {
+            var wordsList = new List<string>();
+
             if (number == 0)
-                return string.Empty;
+            {
+                wordsList.Add(string.Empty);
+                return wordsList;
+            }
 
             if (number < 0)
-                return "minus " + NumberToWords(Math.Abs(number));
-
-            var words = "";
+            {
+                wordsList.Add("minus");
+                wordsList.AddRange(NumberToWords(Math.Abs(number)));
+                return wordsList;
+            }
 
             if (number / 1000000000 > 0)
             {
-                words += NumberToWords(number / 1000000000) + " billion";
+                wordsList.AddRange(NumberToWords(number / 1000000000));
+                wordsList.Add("billion");
                 number %= 1000000000;
             }
 
             if (number / 1000000 > 0)
             {
-                words += NumberToWords(number / 1000000) + " million";
+                wordsList.AddRange(NumberToWords(number / 1000000));
+                wordsList.Add("million");
                 number %= 1000000;
             }
 
             if (number / 1000 > 0)
             {
-                words += NumberToWords(number / 1000) + " thousand";
+                wordsList.AddRange(NumberToWords(number / 1000));
+                wordsList.Add("thousand");
                 number %= 1000;
             }
 
             if (number / 100 > 0)
             {
-                words += NumberToWords(number / 100) + " hundred";
+                wordsList.AddRange(NumberToWords(number / 100));
+                wordsList.Add("hundred");
                 number %= 100;
             }
 
-            words = SmallNumberToWord(number, words, string.Empty);
+            SmallNumberToWord(number, wordsList);
 
-            return words;
+            return wordsList;
         }
 
-        private string SmallNumberToWord(int number, string words, string suffix)
+        private List<string> SmallNumberToWord(int number, List<string> words)
         {
             if (number <= 0) return words;
-            //if (words != "")
-            //    words += " ";
-
-            if (number == 1) return "one";
-
-            var unitsMap = new[] { "zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve", "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen" };
-            var tensMap = new[] { "zero", "ten", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety" };
 
             if (number < 20)
             {
-                var unit = (Units)number;
-                words += unit.ToString();
+                words.Add(Enum.GetName(typeof(Units), number));
             }
             else
             {
-                words += tensMap[number / 10];
+                var unitTensWords = string.Empty;
+                unitTensWords += Enum.GetName(typeof(Tens), number / 10);
                 if ((number % 10) > 0)
-                    words += "-" + unitsMap[number % 10];
+                {
+                    var unit = Enum.GetName(typeof(Units), number % 10);
+                    unitTensWords += "-" + unit.ToString();
+                }
+                words.Add(unitTensWords);
             }
-            return words + suffix;
+            return words;
         }
     }
-
-    public enum Units
-    {
-        zero = 0,
-        one,
-        two,
-        three,
-        four,
-        five,
-        six,
-        seven,
-        eight,
-        nine,
-        ten,
-        eleven,
-        twelve,
-        thirteen,
-        fourteen,
-        fifteen,
-        sixteen,
-        seventeen,
-        eighteen,
-        nineteen
-    };
 }
